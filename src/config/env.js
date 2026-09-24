@@ -1,5 +1,5 @@
-import dotenv from "dotenv";
-import { z } from "zod";
+const dotenv = require("dotenv");
+const { z } = require("zod");
 
 dotenv.config();
 
@@ -14,11 +14,14 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
 });
 
-const { value: env, error } = envSchema.safeParse(process.env);
+const parsed = envSchema.safeParse(process.env);
 
-if (error) {
-  console.error("❌ Invalid environment variables:", error.flatten().fieldErrors);
+if (!parsed.success) {
+  console.error("Invalid environment variables:", parsed.error.message);
   process.exit(1);
 }
 
-export default env;
+
+const env = parsed.data !== undefined ? parsed.data : parsed.value;
+
+module.exports = env;
