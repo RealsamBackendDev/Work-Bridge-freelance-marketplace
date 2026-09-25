@@ -3,7 +3,7 @@ const env = require("./config/env");
 const prisma = require("./config/prisma");
 
 const server = app.listen(env.PORT, () =>
-  console.log(`🌉 WorkBridge API running on http://localhost:${env.PORT}/api/v1`)
+  console.log(`WorkBridge API running on http://localhost:${env.PORT}/api/v1`)
 );
 
 

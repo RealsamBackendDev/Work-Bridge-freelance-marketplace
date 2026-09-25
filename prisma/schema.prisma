@@ -13,33 +13,75 @@ enum Role {
   FREELANCER
 }
 
+enum KycStatus {
+  NOT_SUBMITTED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum KycDocumentType {
+  NIN
+  PASSPORT
+}
+
+enum OtpType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
 model User {
-  id           String   @id @default(uuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         Role     @default(CLIENT)
-  avatar       String   @default("")
-  bio          String   @default("")
-  location     String   @default("")
-  skills       String[] @default([])
-  hourlyRate   Decimal? @db.Decimal(10, 2)
-  balance      Decimal  @default(0) @db.Decimal(10, 2)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String   @id @default(uuid())
+  name            String
+  email           String   @unique
+  phone           String   @unique
+  passwordHash    String
+  role            Role     @default(CLIENT)
+  avatar          String   @default("")
+  bio             String   @default("")
+  location        String   @default("")
+  skills          String[] @default([])
+  hourlyRate      Decimal? @db.Decimal(10, 2)
+  balance         Decimal  @default(0) @db.Decimal(10, 2)
+  isActive        Boolean  @default(true)
+
+  emailVerified   Boolean   @default(false)
+  emailVerifiedAt DateTime?
+
+  kycStatus       KycStatus        @default(NOT_SUBMITTED)
+  kycDocumentType KycDocumentType?
+  kycDocumentNo   String?
+  kycDocumentImg  String?
+  kycReviewedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   refreshTokens RefreshToken[]
+  otpTokens     OtpToken[]
 }
 
 model RefreshToken {
-  id        String   @id @default(uuid())
-  tokenHash String   @unique
+  id        String    @id @default(uuid())
+  tokenHash String    @unique
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   revokedAt DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   @@index([userId])
+}
+
+model OtpToken {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash   String
+  type       OtpType   @default(EMAIL_VERIFICATION)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId, type])
 }

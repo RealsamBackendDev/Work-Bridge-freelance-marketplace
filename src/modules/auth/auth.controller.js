@@ -41,6 +41,26 @@ exports.refresh = catchAsync(async (req, res) => {
   });
 });
 
+exports.verifyEmail = catchAsync(async (req, res) => {
+  const result = await authService.verifyEmail(req.body);
+  sendResponse(res, 200, "Email verified successfully", result);
+});
+
+exports.resendVerification = catchAsync(async (req, res) => {
+  const result = await authService.resendVerification(req.body);
+  sendResponse(res, 200, "If the email is registered and unverified, a new code has been sent", result);
+});
+
+exports.submitKyc = catchAsync(async (req, res) => {
+  const result = await authService.submitKyc({ userId: req.user.id, ...req.body });
+  sendResponse(res, 200, "KYC submitted. It will be reviewed within 24 hours.", result);
+});
+
+exports.reviewKyc = catchAsync(async (req, res) => {
+  const result = await authService.reviewKyc({ userId: req.params.userId, ...req.body });
+  sendResponse(res, 200, `KYC ${req.body.action === "APPROVE" ? "approved" : "rejected"}`, result);
+});
+
 exports.logout = catchAsync(async (req, res) => {
   await authService.logout(req.cookies[REFRESH_COOKIE]);
   res.clearCookie(REFRESH_COOKIE);
