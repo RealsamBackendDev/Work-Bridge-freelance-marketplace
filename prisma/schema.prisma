@@ -30,6 +30,53 @@ enum OtpType {
   PASSWORD_RESET
 }
 
+enum JobStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum JobCategory {
+  WEB_DEVELOPMENT
+  MOBILE_DEVELOPMENT
+  DESIGN
+  WRITING
+  MARKETING
+  DATA
+  OTHER
+}
+
+enum ProposalStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum ProjectStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum MilestoneStatus {
+  PENDING
+  IN_PROGRESS
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+enum TransactionType {
+  MILESTONE_PAYMENT
+  REFUND
+}
+
+enum TransactionStatus {
+  COMPLETED
+  FAILED
+}
+
 model User {
   id              String   @id @default(uuid())
   name            String
@@ -57,8 +104,15 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  refreshTokens RefreshToken[]
-  otpTokens     OtpToken[]
+  refreshTokens        RefreshToken[]
+  otpTokens            OtpToken[]
+  jobsPosted           Job[]          @relation("JobsPosted")
+  jobsHired            Job[]          @relation("JobsHired")
+  proposals            Proposal[]     @relation("Proposals")
+  projectsAsClient     Project[]      @relation("ProjectsAsClient")
+  projectsAsFreelancer Project[]      @relation("ProjectsAsFreelancer")
+  transactionsSent     Transaction[] @relation("TransactionsSent")
+  transactionsReceived Transaction[] @relation("TransactionsReceived")
 }
 
 model RefreshToken {
@@ -84,4 +138,109 @@ model OtpToken {
   createdAt  DateTime  @default(now())
 
   @@index([userId, type])
+}
+
+model Job {
+  id                String      @id @default(uuid())
+  clientId          String
+  client            User        @relation("JobsPosted", fields: [clientId], references: [id])
+  title             String
+  description       String
+  category          JobCategory
+  skillsRequired    String[]    @default([])
+  budgetMin         Decimal     @db.Decimal(10, 2)
+  budgetMax         Decimal     @db.Decimal(10, 2)
+  status            JobStatus   @default(OPEN)
+  hiredFreelancerId String?
+  hiredFreelancer   User?       @relation("JobsHired", fields: [hiredFreelancerId], references: [id])
+  deadline          DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  proposals Proposal[]
+  project   Project?
+
+  @@index([status, createdAt])
+  @@index([clientId, status])
+}
+
+model Proposal {
+  id            String         @id @default(uuid())
+  jobId         String
+  job           Job            @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  freelancerId  String
+  freelancer    User           @relation("Proposals", fields: [freelancerId], references: [id], onDelete: Cascade)
+  coverLetter   String
+  bidAmount     Decimal        @db.Decimal(10, 2)
+  estimatedDays Int
+  status        ProposalStatus @default(PENDING)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  project Project?
+
+  @@unique([jobId, freelancerId])
+  @@index([jobId, status])
+}
+
+model Project {
+  id           String        @id @default(uuid())
+  jobId        String        @unique
+  job          Job           @relation(fields: [jobId], references: [id])
+  proposalId   String        @unique
+  proposal     Proposal      @relation(fields: [proposalId], references: [id])
+  clientId     String
+  client       User          @relation("ProjectsAsClient", fields: [clientId], references: [id])
+  freelancerId String
+  freelancer   User          @relation("ProjectsAsFreelancer", fields: [freelancerId], references: [id])
+  title        String
+  description  String
+  budget       Decimal       @db.Decimal(10, 2)
+  status       ProjectStatus @default(ACTIVE)
+  startDate    DateTime      @default(now())
+  endDate      DateTime?
+
+  milestones Milestone[]
+
+  @@index([clientId, status])
+  @@index([freelancerId, status])
+}
+
+model Milestone {
+  id                 String          @id @default(uuid())
+  projectId          String
+  project            Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title              String
+  description        String
+  amount             Decimal         @db.Decimal(10, 2)
+  dueDate            DateTime
+  status             MilestoneStatus @default(PENDING)
+  submission         String          @default("")
+  rejectionReason    String          @default("")
+  submissionAttempts Int             @default(0)
+  attachments String[] @default([])
+  submittedAt        DateTime?
+  completedAt        DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@index([projectId, status])
+  @@index([dueDate, status])
+}
+
+model Transaction {
+  id          String            @id @default(uuid())
+  milestoneId String?           @unique
+  projectId   String
+  fromUserId  String
+  fromUser    User              @relation("TransactionsSent", fields: [fromUserId], references: [id])
+  toUserId    String
+  toUser      User              @relation("TransactionsReceived", fields: [toUserId], references: [id])
+  amount      Decimal           @db.Decimal(10, 2)
+  type        TransactionType
+  status      TransactionStatus @default(COMPLETED)
+  createdAt   DateTime          @default(now())
+
+  @@index([fromUserId])
+  @@index([toUserId])
 }
