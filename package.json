@@ -9,7 +9,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "db:up": "docker compose up -d",
-    "db:down": "docker compose down"
+    "db:down": "docker compose down",
+    "db:seed": "node scripts/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^5.18.0",
