@@ -47,3 +47,17 @@ exports.reviewKycSchema = z.object({
     reason: z.string().trim().max(500).optional(),
   }),
 });
+
+exports.forgotPasswordSchema = z.object({
+  body: z.object({
+    email: z.string().email().toLowerCase().trim(),
+  }),
+});
+
+exports.resetPasswordSchema = z.object({
+  body: z.object({
+    email: z.string().email().toLowerCase().trim(),
+    code: z.string().regex(/^\d{6}$/, "Reset code must be 6 digits"),
+    newPassword: z.string().min(8, "Password must be at least 8 characters").max(72),
+  }),
+});

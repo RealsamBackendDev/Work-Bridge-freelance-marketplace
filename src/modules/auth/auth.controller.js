@@ -66,3 +66,13 @@ exports.logout = catchAsync(async (req, res) => {
   res.clearCookie(REFRESH_COOKIE);
   sendResponse(res, 200, "Logged out successfully", null);
 });
+
+exports.forgotPassword = catchAsync(async (req, res) => {
+  const result = await authService.forgotPassword(req.body);
+  sendResponse(res, 200, "If the email is registered, a reset code has been sent", result);
+});
+
+exports.resetPassword = catchAsync(async (req, res) => {
+  const result = await authService.resetPassword(req.body);
+  sendResponse(res, 200, "Password reset successfully. Log in with your new password.", result);
+});

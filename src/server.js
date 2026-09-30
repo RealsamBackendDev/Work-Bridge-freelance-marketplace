@@ -1,6 +1,11 @@
 const app = require("./app");
 const env = require("./config/env");
 const prisma = require("./config/prisma");
+const http = require("http");
+const { initSocket } = require("./config/socket");
+
+const httpServer = http.createServer(app);
+initSocket(httpServer);
 
 const server = app.listen(env.PORT, () =>
   console.log(`WorkBridge API running on http://localhost:${env.PORT}/api/v1`)

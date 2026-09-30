@@ -5,10 +5,12 @@ const milestoneRoutes = require("../modules/milestone/milestone.routes");
 const paymentRoutes = require("../modules/payment/payment.routes");
 const projectRoutes = require("../modules/project/project.routes");
 const jobRoutes = require("../modules/job/job.routes");
+const messageRoutes = require("../modules/message/message.routes");
 
 const router = Router();
 
 router.use(uploadRoutes);
+router.use(messageRoutes);
 
 router.get("/", (req, res) =>
   res.json({

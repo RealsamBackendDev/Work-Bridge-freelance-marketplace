@@ -113,6 +113,8 @@ model User {
   projectsAsFreelancer Project[]      @relation("ProjectsAsFreelancer")
   transactionsSent     Transaction[] @relation("TransactionsSent")
   transactionsReceived Transaction[] @relation("TransactionsReceived")
+  conversationsAsClient     Conversation[] @relation("ConversationsClient")
+  conversationsAsFreelancer Conversation[] @relation("ConversationsFreelancer")
 }
 
 model RefreshToken {
@@ -204,6 +206,7 @@ model Project {
 
   @@index([clientId, status])
   @@index([freelancerId, status])
+  conversation Conversation?
 }
 
 model Milestone {
@@ -243,4 +246,28 @@ model Transaction {
 
   @@index([fromUserId])
   @@index([toUserId])
+}
+
+model Conversation {
+  id           String    @id @default(uuid())
+  projectId    String    @unique
+  project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  clientId     String
+  client       User      @relation("ConversationsClient", fields: [clientId], references: [id])
+  freelancerId String
+  freelancer   User      @relation("ConversationsFreelancer", fields: [freelancerId], references: [id])
+  createdAt    DateTime  @default(now())
+  messages     Message[]
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  body           String
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
 }

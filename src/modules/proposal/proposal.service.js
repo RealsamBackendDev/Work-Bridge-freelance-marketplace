@@ -213,6 +213,13 @@ exports.acceptProposal = async ({ proposalId, clientId }) => {
 
     return [accepted, createdProject];
   });
+      await tx.conversation.create({
+      data: {
+        projectId: createdProject.id,
+        clientId: proposal.job.clientId,
+        freelancerId: proposal.freelancerId,
+      },
+    });
 
   return {
     proposal: publicProposal(updatedProposal),

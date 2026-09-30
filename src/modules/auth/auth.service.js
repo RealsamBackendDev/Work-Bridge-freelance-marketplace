@@ -9,6 +9,7 @@ const {
 } = require("../../utils/tokens");
 const { generateOtp, hashOtp, otpExpiry } = require("../../utils/otp");
 const { sendVerificationEmail } = require("../../utils/email");
+const { sendVerificationEmail, sendPasswordResetEmail } = require("../../utils/email");
 
 const publicUser = (user) => ({
   id: user.id,
@@ -44,7 +45,11 @@ const createAndSendOtp = async (user, type) => {
   await prisma.otpToken.create({
     data: { userId: user.id, codeHash: hashOtp(code), type, expiresAt: otpExpiry() },
   });
-  await sendVerificationEmail(user.email, code);
+  if (type === "PASSWORD_RESET") {
+    await sendPasswordResetEmail(user.email, code);
+  } else {
+    await sendVerificationEmail(user.email, code);
+  }
 };
 
 exports.register = async ({ name, email, phone, password, role }) => {
@@ -197,4 +202,48 @@ exports.reviewKyc = async ({ userId, action, reason }) => {
     },
   });
   return { user: publicUser(updated) };
+};
+
+exports.forgotPassword = async ({ email }) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (user) {
+    const recent = await prisma.otpToken.findFirst({
+      where: {
+        userId: user.id,
+        type: "PASSWORD_RESET",
+        createdAt: { gt: new Date(Date.now() - 60 * 1000) },
+      },
+    });
+    if (!recent) await createAndSendOtp(user, "PASSWORD_RESET");
+  }
+  return { sent: true };
+};
+
+exports.resetPassword = async ({ email, code, newPassword }) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) throw new ApiError(400, "Invalid or expired reset code");
+
+  const otp = await prisma.otpToken.findFirst({
+    where: {
+      userId: user.id,
+      type: "PASSWORD_RESET",
+      consumedAt: null,
+      expiresAt: { gt: new Date() },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  if (!otp || otp.codeHash !== hashOtp(code)) {
+    throw new ApiError(400, "Invalid or expired reset code");
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+  await prisma.$transaction([
+    prisma.otpToken.update({ where: { id: otp.id }, data: { consumedAt: new Date() } }),
+    prisma.user.update({ where: { id: user.id }, data: { passwordHash } }),
+    prisma.refreshToken.updateMany({
+      where: { userId: user.id, revokedAt: null },
+      data: { revokedAt: new Date() },
+    }),
+  ]);
+  return { reset: true };
 };

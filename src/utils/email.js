@@ -27,3 +27,11 @@ exports.sendVerificationEmail = (to, code) =>
     text: `Your WorkBridge verification code is: ${code}. It expires in ${env.OTP_EXPIRES_MINUTES} minutes.`,
     html: `<h2>${code}</h2><p>Expires in ${env.OTP_EXPIRES_MINUTES} minutes. If you didn't sign up, ignore this email.</p>`,
   });
+
+  exports.sendPasswordResetEmail = (to, code) =>
+  exports.sendEmail({
+    to,
+    subject: "Reset your WorkBridge password",
+    text: `Your password reset code is: ${code}. It expires in ${env.OTP_EXPIRES_MINUTES} minutes. If you did not request this, ignore this email.`,
+    html: `<h2>${code}</h2><p>Expires in ${env.OTP_EXPIRES_MINUTES} minutes.</p>`,
+  });

@@ -11,6 +11,8 @@ const {
   resendOtpSchema,
   submitKycSchema,
   reviewKycSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } = require("./auth.validator");
 
 const router = Router();
@@ -194,6 +196,9 @@ router.post("/submit-kyc", authenticate, authorize("FREELANCER"), validate(submi
  *       400: { description: No pending KYC }
  *       403: { description: Admin only }
  */
+
+router.post("/forgot-password", authLimiter, validate(forgotPasswordSchema), authController.forgotPassword);
+router.post("/reset-password", authLimiter, validate(resetPasswordSchema), authController.resetPassword);
 router.post("/admin/kyc/:userId/review", authenticate, authorize("ADMIN"), validate(reviewKycSchema), authController.reviewKyc);
 
 module.exports = router;
