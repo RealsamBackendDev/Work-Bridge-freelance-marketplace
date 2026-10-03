@@ -8,6 +8,7 @@ exports.createProposalSchema = z.object({
     coverLetter: z.string().trim().min(20).max(3000),
     bidAmount: z.number().min(1),
     estimatedDays: z.number().int().min(1).max(365),
+    attachments: z.array(z.string().url("Each attachment must be a valid URL")).max(5, "Maximum 5 attachments").optional(),
   }),
 });
 
@@ -17,6 +18,7 @@ exports.updateProposalSchema = z.object({
     coverLetter: z.string().trim().min(20).max(3000).optional(),
     bidAmount: z.number().min(1).optional(),
     estimatedDays: z.number().int().min(1).max(365).optional(),
+    attachments: z.array(z.string().url("Each attachment must be a valid URL")).max(5, "Maximum 5 attachments").optional(),
   }),
 });
 

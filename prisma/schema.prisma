@@ -178,6 +178,7 @@ model Proposal {
   status        ProposalStatus @default(PENDING)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  attachments   String[]       @default([])
 
   project Project?
 

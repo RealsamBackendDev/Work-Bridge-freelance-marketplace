@@ -7,6 +7,7 @@ const uploadRoutes = require("../modules/upload/upload.routes");
 const messageRoutes = require("../modules/message/message.routes");
 const projectRoutes = require("../modules/project/project.routes");
 const jobRoutes = require("../modules/job/job.routes");
+const userRoutes = require("../modules/user/user.routes");
 
 const router = Router();
 
@@ -33,5 +34,6 @@ router.use(messageRoutes);
 router.use("/projects", projectRoutes);
 router.use("/jobs", jobRoutes);
 router.use("/auth", authRoutes);
+router.use("/user", userRoutes);
 
 module.exports = router;

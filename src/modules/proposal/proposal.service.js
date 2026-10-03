@@ -13,6 +13,7 @@ const publicProposal = (p) => ({
   coverLetter: p.coverLetter,
   bidAmount: toMoney(p.bidAmount),
   estimatedDays: p.estimatedDays,
+  attachments: p.attachments || [],
   status: p.status,
   createdAt: p.createdAt,
 });
@@ -30,7 +31,7 @@ const publicProject = (p) => ({
   startDate: p.startDate,
 });
 
-exports.createProposal = async ({ jobId, freelancerId, coverLetter, bidAmount, estimatedDays }) => {
+exports.createProposal = async ({ jobId, freelancerId, coverLetter, bidAmount, attachments, estimatedDays }) => {
   const job = await prisma.job.findUnique({ where: { id: jobId } });
   if (!job) throw new ApiError(404, "Job not found");
   if (job.status !== "OPEN") throw new ApiError(400, "This job is no longer accepting proposals");
@@ -38,7 +39,14 @@ exports.createProposal = async ({ jobId, freelancerId, coverLetter, bidAmount, e
 
   try {
     const proposal = await prisma.proposal.create({
-      data: { jobId, freelancerId, coverLetter, bidAmount, estimatedDays },
+      data: {
+        jobId,
+        freelancerId,
+        coverLetter,
+        bidAmount,
+        estimatedDays,
+        attachments: attachments || [],
+      },
       include: { job: { select: { id: true, title: true } } },
     });
     return { proposal: publicProposal(proposal) };
