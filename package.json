@@ -4,13 +4,14 @@
   "description": "WorkBridge — freelance marketplace backend API",
   "main": "src/server.js",
   "scripts": {
-    "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
-    "db:seed": "node scripts/seed.js"
+    "db:seed": "node scripts/seed.js",
+    "killport": "node -e \"require('child_process').exec('netstat -ano | findstr :5000', (e, out) => { const pid = out.trim().split(/\\s+/).pop(); if (pid && pid !== '0') { require('child_process').execSync('taskkill /PID ' + pid + ' /F'); console.log('killed', pid); } else console.log('port 5000 free'); })\"",
+  "dev": "node --watch src/server.js"
   },
   "dependencies": {
     "@prisma/client": "^5.18.0",

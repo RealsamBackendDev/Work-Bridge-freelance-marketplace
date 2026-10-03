@@ -34,6 +34,6 @@ router.use(messageRoutes);
 router.use("/projects", projectRoutes);
 router.use("/jobs", jobRoutes);
 router.use("/auth", authRoutes);
-router.use("/user", userRoutes);
+router.use(userRoutes);
 
 module.exports = router;

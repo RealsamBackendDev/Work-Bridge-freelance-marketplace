@@ -11,3 +11,8 @@ exports.updateProfile = catchAsync(async (req, res) => {
   const result = await userService.updateProfile({ userId: req.user.id, update: req.body });
   sendResponse(res, 200, "Profile updated successfully", result);
 });
+
+exports.listPendingKyc = catchAsync(async (req, res) => {
+  const result = await userService.listPendingKyc();
+  sendResponse(res, 200, "Pending KYC submissions retrieved", result);
+});

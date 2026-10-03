@@ -34,3 +34,16 @@ exports.updateProfile = async ({ userId, update }) => {
   const user = await prisma.user.update({ where: { id: userId }, data: update });
   return { user: profileView(user) };
 };
+
+exports.listPendingKyc = async () => {
+  const users = await prisma.user.findMany({
+    where: { kycStatus: "PENDING" },
+    select: {
+      id: true, name: true, email: true,
+      kycDocumentType: true, kycDocumentNo: true, kycDocumentImg: true,
+      updatedAt: true,
+    },
+    orderBy: { updatedAt: "desc" },
+  });
+  return { pending: users };
+};

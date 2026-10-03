@@ -100,6 +100,7 @@ model User {
   kycDocumentNo   String?
   kycDocumentImg  String?
   kycReviewedAt   DateTime?
+   kycRejectionReason String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -204,6 +205,8 @@ model Project {
   endDate      DateTime?
 
   milestones Milestone[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   @@index([clientId, status])
   @@index([freelancerId, status])
@@ -259,6 +262,7 @@ model Conversation {
   freelancer   User      @relation("ConversationsFreelancer", fields: [freelancerId], references: [id])
   createdAt    DateTime  @default(now())
   messages     Message[]
+  updatedAt    DateTime  @updatedAt
 }
 
 model Message {

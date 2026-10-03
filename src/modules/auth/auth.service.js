@@ -195,9 +195,10 @@ exports.reviewKyc = async ({ userId, action, reason }) => {
 
   const updated = await prisma.user.update({
     where: { id: userId },
-    data: {
+        data: {
       kycStatus: action === "APPROVE" ? "VERIFIED" : "REJECTED",
       kycReviewedAt: new Date(),
+      kycRejectionReason: action === "REJECT" ? (reason || "No reason provided") : null,
     },
   });
   return { user: publicUser(updated) };

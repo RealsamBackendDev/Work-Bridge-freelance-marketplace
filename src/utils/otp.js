@@ -8,4 +8,4 @@ exports.hashOtp = (code) =>
   crypto.createHash("sha256").update(code).digest("hex");
 
 exports.otpExpiry = () =>
-  new Date(Date.now() + Number(env.OTP_EXPIRES_MINUTES) * 60 * 1000);
+  new Date(Date.now() + (Number(env.OTP_EXPIRES_MINUTES) || 15) * 60 * 1500);
