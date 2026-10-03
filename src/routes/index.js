@@ -3,14 +3,12 @@ const authRoutes = require("../modules/auth/auth.routes");
 const proposalRoutes = require("../modules/proposal/proposal.routes");
 const milestoneRoutes = require("../modules/milestone/milestone.routes");
 const paymentRoutes = require("../modules/payment/payment.routes");
+const uploadRoutes = require("../modules/upload/upload.routes");
+const messageRoutes = require("../modules/message/message.routes");
 const projectRoutes = require("../modules/project/project.routes");
 const jobRoutes = require("../modules/job/job.routes");
-const messageRoutes = require("../modules/message/message.routes");
 
 const router = Router();
-
-router.use(uploadRoutes);
-router.use(messageRoutes);
 
 router.get("/", (req, res) =>
   res.json({
@@ -30,6 +28,8 @@ router.get("/health", (req, res) =>
 router.use(proposalRoutes);
 router.use(milestoneRoutes);
 router.use(paymentRoutes);
+router.use(uploadRoutes);
+router.use(messageRoutes);
 router.use("/projects", projectRoutes);
 router.use("/jobs", jobRoutes);
 router.use("/auth", authRoutes);

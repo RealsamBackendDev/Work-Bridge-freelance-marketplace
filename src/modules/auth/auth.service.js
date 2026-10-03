@@ -8,7 +8,6 @@ const {
   hashToken,
 } = require("../../utils/tokens");
 const { generateOtp, hashOtp, otpExpiry } = require("../../utils/otp");
-const { sendVerificationEmail } = require("../../utils/email");
 const { sendVerificationEmail, sendPasswordResetEmail } = require("../../utils/email");
 
 const publicUser = (user) => ({
