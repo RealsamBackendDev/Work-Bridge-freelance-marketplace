@@ -67,14 +67,16 @@ enum MilestoneStatus {
   APPROVED
   REJECTED
 }
-enum TransactionType {
-  MILESTONE_PAYMENT
-  REFUND
-}
 
 enum TransactionStatus {
   COMPLETED
   FAILED
+}
+
+enum TransactionType {
+  MILESTONE_PAYMENT
+  REFUND
+  WITHDRAWAL
 }
 
 model User {
@@ -104,7 +106,7 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
+  withdrawals Withdrawal[]
   refreshTokens        RefreshToken[]
   otpTokens            OtpToken[]
   jobsPosted           Job[]          @relation("JobsPosted")
@@ -238,7 +240,7 @@ model Milestone {
 model Transaction {
   id          String            @id @default(uuid())
   milestoneId String?           @unique
-  projectId   String
+  projectId   String?
   fromUserId  String
   fromUser    User              @relation("TransactionsSent", fields: [fromUserId], references: [id])
   toUserId    String
@@ -275,4 +277,17 @@ model Message {
   createdAt      DateTime     @default(now())
 
   @@index([conversationId, createdAt])
+}
+
+model Withdrawal {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  amount        Decimal  @db.Decimal(10, 2)
+  bankName      String
+  accountNumber String
+  status        String   @default("PROCESSING")
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
 }

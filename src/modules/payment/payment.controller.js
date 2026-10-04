@@ -20,3 +20,13 @@ exports.listMyTransactions = catchAsync(async (req, res) => {
   });
   sendResponse(res, 200, "Transactions retrieved successfully", result);
 });
+
+exports.withdraw = catchAsync(async (req, res) => {
+  const result = await paymentService.withdraw({ userId: req.user.id, ...req.body });
+  sendResponse(res, 200, "Withdrawal requested (simulated payout)", result);
+});
+
+exports.listWithdrawals = catchAsync(async (req, res) => {
+  const result = await paymentService.listWithdrawals({ userId: req.user.id });
+  sendResponse(res, 200, "Withdrawals retrieved successfully", result);
+});

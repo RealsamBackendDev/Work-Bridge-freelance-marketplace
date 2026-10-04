@@ -53,6 +53,14 @@ exports.listConversations = async ({ userId }) => {
     orderBy: { updatedAt: "desc" },
   });
 
+  const ids = conversations.map((c) => c.id);
+  const unread = await prisma.message.groupBy({
+    by: ["conversationId"],
+    where: { conversationId: { in: ids }, readAt: null, senderId: { not: userId } },
+    _count: true,
+  });
+  const unreadMap = Object.fromEntries(unread.map((u) => [u.conversationId, u._count]));
+
   return {
     conversations: conversations.map((c) => ({
       id: c.id,
@@ -60,7 +68,9 @@ exports.listConversations = async ({ userId }) => {
       otherParty: c.clientId === userId ? c.freelancer : c.client,
       lastMessage: c.messages[0] ? c.messages[0].body : null,
       lastMessageAt: c.messages[0] ? c.messages[0].createdAt : null,
+      unreadCount: unreadMap[c.id] || 0,
     })),
+    totalUnread: Object.values(unreadMap).reduce((a, b) => a + b, 0),
   };
 };
 

@@ -59,3 +59,41 @@ exports.listMyTransactions = async ({ userId, page, limit }) => {
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
   };
 };
+
+exports.withdraw = async ({ userId, amount, bankName, accountNumber }) => {
+  if (amount < 1000) throw new ApiError(400, "Minimum withdrawal is ₦1,000");
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || Number(user.balance) < amount) {
+    throw new ApiError(402, "Insufficient balance");
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    const updated = await tx.user.update({
+      where: { id: userId },
+      data: { balance: { decrement: amount } },
+    });
+    await tx.withdrawal.create({
+      data: { userId, amount, bankName, accountNumber },
+    });
+    await tx.transaction.create({
+      data: {
+        projectId: "withdrawal",
+        fromUserId: userId,
+        toUserId: userId,
+        amount,
+        type: "WITHDRAWAL",
+      },
+    });
+    return updated;
+  });
+
+  return { balance: toMoney(result.balance) };
+};
+
+exports.listWithdrawals = async ({ userId }) => {
+  const withdrawals = await prisma.withdrawal.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
+  return { withdrawals };
+};
