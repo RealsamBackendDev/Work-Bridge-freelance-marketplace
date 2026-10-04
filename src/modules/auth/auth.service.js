@@ -44,10 +44,15 @@ const createAndSendOtp = async (user, type) => {
   await prisma.otpToken.create({
     data: { userId: user.id, codeHash: hashOtp(code), type, expiresAt: otpExpiry() },
   });
-  if (type === "PASSWORD_RESET") {
-    await sendPasswordResetEmail(user.email, code);
-  } else {
-    await sendVerificationEmail(user.email, code);
+  try {
+    if (type === "PASSWORD_RESET") {
+      await sendPasswordResetEmail(user.email, code);
+    } else {
+      await sendVerificationEmail(user.email, code);
+    }
+  } catch (err) {
+    console.error(`⚠️ Email send failed (${type}) for ${user.email}:`, err.message);
+    console.error(`📧 OTP for ${user.email}: ${code}`);
   }
 };
 
