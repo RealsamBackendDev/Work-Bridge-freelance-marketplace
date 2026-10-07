@@ -13,6 +13,6 @@ module.exports = (err, req, res, next) => {
 
   if (err instanceof ApiError) return sendError(res, err.statusCode, err.message);
 
-  if (env.NODE_ENV === "development") console.error(err);
+  if (env.NODE_ENV !== "production") console.error(err);
   return sendError(res, 500, "Something went wrong. Please try again.");
 };

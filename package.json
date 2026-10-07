@@ -5,13 +5,14 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
+    "test": "jest --runInBand",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:seed": "node scripts/seed.js",
     "killport": "node -e \"require('child_process').exec('netstat -ano | findstr :5000', (e, out) => { const pid = out.trim().split(/\\s+/).pop(); if (pid && pid !== '0') { require('child_process').execSync('taskkill /PID ' + pid + ' /F'); console.log('killed', pid); } else console.log('port 5000 free'); })\"",
-  "dev": "node --watch src/server.js"
+    "dev": "node --watch src/server.js"
   },
   "dependencies": {
     "@prisma/client": "^5.18.0",
@@ -32,7 +33,9 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "jest": "^30.5.2",
     "nodemon": "^3.1.4",
-    "prisma": "^5.18.0"
+    "prisma": "^5.18.0",
+    "supertest": "^7.3.1"
   }
 }

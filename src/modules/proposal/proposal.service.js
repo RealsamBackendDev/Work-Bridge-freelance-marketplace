@@ -186,7 +186,8 @@ exports.acceptProposal = async ({ proposalId, clientId }) => {
   if (proposal.status !== "PENDING" || proposal.job.status !== "OPEN") {
     throw new ApiError(400, "This proposal can no longer be accepted");
   }
-    const freelancer = await prisma.user.findUnique({ where: { id: proposal.freelancerId } });
+
+  const freelancer = await prisma.user.findUnique({ where: { id: proposal.freelancerId } });
   if (freelancer.kycStatus !== "VERIFIED") {
     throw new ApiError(400, "This freelancer has not completed KYC verification");
   }
@@ -219,15 +220,16 @@ exports.acceptProposal = async ({ proposalId, clientId }) => {
       },
     });
 
-    return [accepted, createdProject];
-  });
-         await tx.conversation.create({
+    await tx.conversation.create({
       data: {
         projectId: createdProject.id,
         clientId: proposal.job.clientId,
         freelancerId: proposal.freelancerId,
       },
     });
+
+    return [accepted, createdProject];
+  });
 
   return {
     proposal: publicProposal(updatedProposal),

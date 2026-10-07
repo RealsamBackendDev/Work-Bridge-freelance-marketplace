@@ -3,6 +3,7 @@ const rateLimit = require("express-rate-limit");
 const authController = require("./auth.controller");
 const validate = require("../../middleware/validate");
 const { authenticate } = require("../../middleware/authenticate");
+const env = require("../../config/env");
 const { authorize } = require("../../middleware/authorize");
 const {
   registerSchema,
@@ -17,18 +18,20 @@ const {
 
 const router = Router();
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 20,
-  standardHeaders: "draft-7",
-  legacyHeaders: false,
-  message: {
-    success: false,
-    message: "Too many attempts. Try again in 15 minutes.",
-    data: null,
-  },
-});
-
+const authLimiter =
+  env.NODE_ENV === "test"
+    ? (req, res, next) => next()
+    : rateLimit({
+        windowMs: 15 * 60 * 1000,
+        limit: 20,
+        standardHeaders: "draft-7",
+        legacyHeaders: false,
+        message: {
+          success: false,
+          message: "Too many attempts. Try again in 15 minutes.",
+          data: null,
+        },
+      });
 /**
  * @openapi
  * /auth/register:

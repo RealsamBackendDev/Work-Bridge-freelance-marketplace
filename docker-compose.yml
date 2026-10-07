@@ -12,5 +12,19 @@ services:
     volumes:
       - workbridge_data:/var/lib/postgresql/data
 
+  db_test:
+    image: postgres:16-alpine
+    container_name: workbridge-db-test
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: workbridge
+      POSTGRES_PASSWORD: workbridge_test
+      POSTGRES_DB: workbridge_test
+    ports:
+      - "5433:5432"
+    volumes:
+      - workbridge_test_data:/var/lib/postgresql/data
+
 volumes:
   workbridge_data:
+  workbridge_test_data:
