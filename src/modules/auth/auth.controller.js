@@ -1,13 +1,14 @@
 const authService = require("./auth.service");
 const catchAsync = require("../../utils/catchAsync");
 const { sendResponse } = require("../../utils/sendResponse");
+const env = require("../../config/env")
 
 const REFRESH_COOKIE = "workbridge_rt";
 
 const cookieOptions = {
-  httpOnly: true, 
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "strict",
+  httpOnly: true,
+  secure: env.NODE_ENV === "production",
+  sameSite: env.NODE_ENV === "production" ? "none" : "strict",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
