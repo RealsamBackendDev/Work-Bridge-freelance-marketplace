@@ -3,13 +3,13 @@ const env = require("../config/env");
 
 const hasSmtp = Boolean(env.SMTP_HOST && env.SMTP_USER);
 
-const transporter = hasSmtp
-  ? nodemailer.createTransport({
-      host: env.SMTP_HOST,
-      port: Number(env.SMTP_PORT) || 587,
-      auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
-    })
-  : null;
+const transporter = nodemailer.createTransport({
+  host: env.SMTP_HOST,
+  port: Number(env.SMTP_PORT) || 587,
+  secure: Number(env.SMTP_PORT) === 465,
+  auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
+  connectionTimeout: 15000,
+});
 
 exports.sendEmail = async ({ to, subject, text, html }) => {
   if (!transporter) {
