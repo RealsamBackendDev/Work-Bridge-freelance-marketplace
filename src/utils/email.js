@@ -1,20 +1,32 @@
-const { Resend } = require("resend");
 const env = require("../config/env");
 
-const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
-
 const sendEmail = async ({ to, subject, text, html }) => {
-  if (!resend) {
+  if (!env.SENDGRID_API_KEY) {
     console.log(`\n📧 [DEV EMAIL] To: ${to}\nSubject: ${subject}\n${text}\n`);
     return { delivered: false, devLogged: true };
   }
-  await resend.emails.send({
-    from: env.SMTP_FROM || "WorkBridge <onboarding@resend.dev>",
-    to,
-    subject,
-    text,
-    html,
+
+  const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.SENDGRID_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email: to }] }],
+      from: { email: env.MAIL_FROM || "yourgmail@gmail.com" },
+      subject,
+      content: [
+        { type: "text/plain", value: text },
+        ...(html ? [{ type: "text/html", value: html }] : []),
+      ],
+    }),
   });
+
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`SendGrid ${res.status}: ${detail}`);
+  }
   return { delivered: true };
 };
 
