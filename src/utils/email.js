@@ -1,32 +1,24 @@
 const env = require("../config/env");
 
 const sendEmail = async ({ to, subject, text, html }) => {
-  if (!env.SENDGRID_API_KEY) {
+  if (!env.BREVO_API_KEY) {
     console.log(`\n📧 [DEV EMAIL] To: ${to}\nSubject: ${subject}\n${text}\n`);
     return { delivered: false, devLogged: true };
   }
 
-  const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${env.SENDGRID_API_KEY}`,
-      "Content-Type": "application/json",
-    },
+    headers: { "api-key": env.BREVO_API_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
-      personalizations: [{ to: [{ email: to }] }],
-      from: { email: env.MAIL_FROM || "yourgmail@gmail.com" },
+      sender: { email: env.MAIL_FROM || "yourgmail@gmail.com", name: "WorkBridge" },
+      to: [{ email: to }],
       subject,
-      content: [
-        { type: "text/plain", value: text },
-        ...(html ? [{ type: "text/html", value: html }] : []),
-      ],
+      textContent: text,
+      ...(html ? { htmlContent: html } : {}),
     }),
   });
 
-  if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(`SendGrid ${res.status}: ${detail}`);
-  }
+  if (!res.ok) throw new Error(`Brevo ${res.status}: ${await res.text()}`);
   return { delivered: true };
 };
 

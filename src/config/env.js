@@ -19,7 +19,7 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   SMTP_FROM: z.string().default("WorkBridge <no-reply@workbridge.dev>"),
-  SENDGRID_API_KEY: z.string().optional(),
+  BREVO_API_KEY: z.string().optional(),
   MAIL_FROM: z.string().email().optional(),
 
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
