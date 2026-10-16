@@ -3,7 +3,7 @@ const paymentController = require("./payment.controller");
 const { authenticate } = require("../../middleware/authenticate");
 const validate = require("../../middleware/validate");
 const { authorize } = require("../../middleware/authorize");
-const { topupSchema, listTransactionsSchema, withdrawSchema } = require("./payment.validator");
+const { topupSchema, listTransactionsSchema, withdrawSchema, fundingSchema, referenceSchema } = require("./payment.validator");
 
 const router = Router();
 
