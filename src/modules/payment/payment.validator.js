@@ -20,3 +20,11 @@ exports.withdrawSchema = z.object({
     accountNumber: z.string().trim().min(8).max(20),
   }),
 });
+
+exports.fundingSchema = z.object({
+  body: z.object({ amount: z.number().min(100).max(10000000) }),
+});
+
+exports.referenceSchema = z.object({
+  params: z.object({ reference: z.string().min(5) }),
+});

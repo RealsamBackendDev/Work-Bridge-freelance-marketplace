@@ -12,5 +12,7 @@ router.get("/wallet", authenticate, paymentController.getBalance);
 router.get("/transactions/my", authenticate, validate(listTransactionsSchema), paymentController.listMyTransactions);
 router.post("/wallet/withdraw", authenticate, validate(withdrawSchema), paymentController.withdraw);
 router.get("/withdrawals/my", authenticate, paymentController.listWithdrawals);
+router.post("/payments/paystack/initialize", authenticate, authorize("CLIENT"), validate(fundingSchema), paymentController.initializeFunding);
+router.get("/payments/paystack/verify/:reference", authenticate, validate(referenceSchema), paymentController.verifyFunding);
 
 module.exports = router;

@@ -30,3 +30,12 @@ exports.listWithdrawals = catchAsync(async (req, res) => {
   const result = await paymentService.listWithdrawals({ userId: req.user.id });
   sendResponse(res, 200, "Withdrawals retrieved successfully", result);
 });
+exports.initializeFunding = catchAsync(async (req, res) => {
+  const result = await paymentService.initializeFunding({ userId: req.user.id, amount: req.body.amount });
+  sendResponse(res, 200, "Payment initialized", result);
+});
+
+exports.verifyFunding = catchAsync(async (req, res) => {
+  const result = await paymentService.verifyFunding({ userId: req.user.id, reference: req.params.reference });
+  sendResponse(res, 200, result.status === "COMPLETED" ? "Wallet funded successfully" : "Payment not completed", result);
+});

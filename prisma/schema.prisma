@@ -68,15 +68,17 @@ enum MilestoneStatus {
   REJECTED
 }
 
-enum TransactionStatus {
-  COMPLETED
-  FAILED
-}
-
 enum TransactionType {
   MILESTONE_PAYMENT
   REFUND
   WITHDRAWAL
+  WALLET_FUNDING
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
 }
 
 model User {
@@ -247,6 +249,7 @@ model Transaction {
   toUser      User              @relation("TransactionsReceived", fields: [toUserId], references: [id])
   amount      Decimal           @db.Decimal(10, 2)
   type        TransactionType
+  reference String?            @unique
   status      TransactionStatus @default(COMPLETED)
   createdAt   DateTime          @default(now())
 

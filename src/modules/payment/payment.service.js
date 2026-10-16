@@ -1,4 +1,6 @@
 const prisma = require("../../config/prisma");
+const ApiError = require("../../utils/ApiError");
+const env = require("../../config/env");
 
 const toMoney = (d) => (d === null || d === undefined ? null : Number(d));
 
@@ -96,4 +98,73 @@ exports.listWithdrawals = async ({ userId }) => {
     orderBy: { createdAt: "desc" },
   });
   return { withdrawals };
+};
+
+exports.initializeFunding = async ({ userId, amount }) => {
+  if (!env.PAYSTACK_SECRET_KEY) throw new ApiError(500, "Payment provider not configured");
+  if (amount < 100) throw new ApiError(400, "Minimum funding is ₦100");
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new ApiError(404, "User not found");
+
+  const reference = `WB-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+
+  const paystackRes = await fetch("https://api.paystack.co/transaction/initialize", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.PAYSTACK_SECRET_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: user.email,
+      amount: Math.round(amount * 100),
+      reference,
+      callback_url: `${env.CORS_ORIGIN}/wallet`,
+      metadata: { userId: user.id, amount },
+    }),
+  });
+
+  const data = await paystackRes.json();
+  if (!data.status) throw new ApiError(502, data.message || "Paystack initialization failed");
+
+  await prisma.transaction.create({
+    data: {
+      fromUserId: userId,
+      toUserId: userId,
+      amount,
+      type: "WALLET_FUNDING",
+      status: "PENDING",
+      reference,
+    },
+  });
+
+  return { authorizationUrl: data.data.authorization_url, reference };
+};
+
+exports.verifyFunding = async ({ userId, reference }) => {
+  const txn = await prisma.transaction.findUnique({ where: { reference } });
+  if (!txn || txn.fromUserId !== userId) throw new ApiError(404, "Transaction not found");
+  if (txn.status === "COMPLETED") return { status: "COMPLETED", already: true };
+
+  const res = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+    headers: { Authorization: `Bearer ${env.PAYSTACK_SECRET_KEY}` },
+  });
+  const data = await res.json();
+  if (!data.status) throw new ApiError(502, "Verification failed");
+
+  if (data.data.status !== "success") {
+    await prisma.transaction.update({ where: { id: txn.id }, data: { status: "FAILED" } });
+    return { status: "FAILED" };
+  }
+
+  const updated = await prisma.$transaction(async (tx) => {
+    const u = await tx.user.update({
+      where: { id: userId },
+      data: { balance: { increment: txn.amount } },
+    });
+    await tx.transaction.update({ where: { id: txn.id }, data: { status: "COMPLETED" } });
+    return u;
+  });
+
+  return { status: "COMPLETED", balance: toMoney(updated.balance) };
 };
