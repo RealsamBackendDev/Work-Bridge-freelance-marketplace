@@ -21,7 +21,6 @@ const publicTransaction = (t, viewerId) => ({
   createdAt: t.createdAt,
 });
 
-
 exports.topup = async ({ userId, amount }) => {
   const user = await prisma.user.update({
     where: { id: userId },
@@ -55,11 +54,13 @@ exports.listMyTransactions = async ({ userId, page, limit }) => {
   ]);
 
   const shaped = transactions.map((t) =>
-    publicTransaction({
-      ...t,
-      counterparty: t.fromUserId === userId ? t.toUser : t.fromUser,
-    }),
-    userId
+    publicTransaction(
+      {
+        ...t,
+        counterparty: t.fromUserId === userId ? t.toUser : t.fromUser,
+      },
+      userId
+    )
   );
 
   return {
@@ -69,14 +70,13 @@ exports.listMyTransactions = async ({ userId, page, limit }) => {
 };
 
 exports.withdraw = async ({ userId, amount, bankName, accountNumber }) => {
-  if (amount < 1000) throw new ApiError(400, "Minimum withdrawal is ₦1,000");
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user || Number(user.balance) < amount) {
-    throw new ApiError(402, "Insufficient balance");
+    throw new ApiError(402, "Insufficient balance for this withdrawal");
   }
 
-  const result = await prisma.$transaction(async (tx) => {
-    const updated = await tx.user.update({
+  const updated = await prisma.$transaction(async (tx) => {
+    const u = await tx.user.update({
       where: { id: userId },
       data: { balance: { decrement: amount } },
     });
@@ -85,17 +85,17 @@ exports.withdraw = async ({ userId, amount, bankName, accountNumber }) => {
     });
     await tx.transaction.create({
       data: {
-        projectId: "withdrawal",
         fromUserId: userId,
         toUserId: userId,
         amount,
         type: "WITHDRAWAL",
+        status: "COMPLETED",
       },
     });
-    return updated;
+    return u;
   });
 
-  return { balance: toMoney(result.balance) };
+  return { balance: toMoney(updated.balance) };
 };
 
 exports.listWithdrawals = async ({ userId }) => {
@@ -103,7 +103,16 @@ exports.listWithdrawals = async ({ userId }) => {
     where: { userId },
     orderBy: { createdAt: "desc" },
   });
-  return { withdrawals };
+  return {
+    withdrawals: withdrawals.map((w) => ({
+      id: w.id,
+      amount: toMoney(w.amount),
+      bankName: w.bankName,
+      accountNumber: `···${w.accountNumber.slice(-4)}`,
+      status: w.status,
+      createdAt: w.createdAt,
+    })),
+  };
 };
 
 exports.initializeFunding = async ({ userId, amount }) => {
