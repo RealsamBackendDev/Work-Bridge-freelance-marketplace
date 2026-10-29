@@ -278,6 +278,7 @@ model Message {
   body           String
   readAt         DateTime?
   createdAt      DateTime     @default(now())
+  attachments    String[] @default([])
 
   @@index([conversationId, createdAt])
 }

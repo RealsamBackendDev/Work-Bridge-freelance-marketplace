@@ -10,6 +10,7 @@ const publicMessage = (m, viewerId) => ({
   mine: m.senderId === viewerId,
   readAt: m.readAt,
   createdAt: m.createdAt,
+  attachments: m.attachments,
 });
 
 const getParticipantConversation = async (conversationId, userId) => {
@@ -27,18 +28,27 @@ const getParticipantConversation = async (conversationId, userId) => {
   return conversation;
 };
 
-exports.createMessage = async ({ conversationId, senderId, body, viaSocket = false }) => {
+exports.createMessage = async ({ conversationId, senderId, body, attachments, viaSocket = false }) => {
   const conversation = await getParticipantConversation(conversationId, senderId);
   const message = await prisma.message.create({
-    data: { conversationId, senderId, body },
+    data: { conversationId, senderId, body, attachments: attachments || [] },
   });
 
   const io = getIo();
   if (io) {
-    const payload = { message: publicMessage(message, conversation.clientId) };
-    io.to(`user:${conversation.clientId}`).to(`user:${conversation.freelancerId}`).emit("message:new", payload);
+    io.to(`user:${conversation.clientId}`).to(`user:${conversation.freelancerId}`).emit("message:new", {
+      message: {
+        id: message.id,
+        conversationId: message.conversationId,
+        senderId: message.senderId,
+        body: message.body,
+        attachments: message.attachments,
+        readAt: message.readAt,
+        createdAt: message.createdAt,
+      },
+    });
   }
-  return { message: publicMessage(message, senderId) };
+  return { message: { ...publicMessage(message, senderId), attachments: message.attachments } };
 };
 
 exports.listConversations = async ({ userId }) => {

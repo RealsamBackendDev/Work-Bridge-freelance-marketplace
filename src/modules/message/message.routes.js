@@ -22,13 +22,15 @@ router.get("/conversations/:id/messages", authenticate, catchAsync(async (req, r
 }));
 
 router.post("/conversations/:id/messages", authenticate, catchAsync(async (req, res) => {
-  if (!req.body.body || !req.body.body.trim()) {
-    return res.status(400).json({ success: false, message: "Message body is required", data: null });
+  const attachments = Array.isArray(req.body.attachments) ? req.body.attachments.slice(0, 5) : [];
+  if (!req.body.body?.trim() && attachments.length === 0) {
+    return res.status(400).json({ success: false, message: "Type a message or attach a file", data: null });
   }
   const result = await messageService.createMessage({
     conversationId: req.params.id,
     senderId: req.user.id,
-    body: req.body.body.trim(),
+    body: req.body.body?.trim() || "",
+    attachments,
   });
   sendResponse(res, 201, "Message sent", result);
 }));
