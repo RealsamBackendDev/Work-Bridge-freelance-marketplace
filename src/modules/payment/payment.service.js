@@ -21,39 +21,6 @@ const publicTransaction = (t, viewerId) => ({
   createdAt: t.createdAt,
 });
 
-exports.listMyTransactions = async ({ userId, page, limit }) => {
-  const skip = (page - 1) * limit;
-  const where = { OR: [{ fromUserId: userId }, { toUserId: userId }] };
-
-  const [transactions, total] = await Promise.all([
-    prisma.transaction.findMany({
-      where,
-      include: {
-        fromUser: { select: { id: true, name: true } },
-        toUser: { select: { id: true, name: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      skip,
-      take: limit,
-    }),
-    prisma.transaction.count({ where }),
-  ]);
-
-  const shaped = transactions.map((t) =>
-    publicTransaction(
-      {
-        ...t,
-        counterparty: t.fromUserId === userId ? t.toUser : t.fromUser,
-      },
-      userId
-    )
-  );
-
-  return {
-    transactions: shaped,
-    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
-  };
-};
 
 exports.topup = async ({ userId, amount }) => {
   const user = await prisma.user.update({
@@ -90,9 +57,9 @@ exports.listMyTransactions = async ({ userId, page, limit }) => {
   const shaped = transactions.map((t) =>
     publicTransaction({
       ...t,
-      direction: t.fromUserId === userId ? "DEBIT" : "CREDIT",
       counterparty: t.fromUserId === userId ? t.toUser : t.fromUser,
-    })
+    }),
+    userId
   );
 
   return {
